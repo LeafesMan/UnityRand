@@ -1,13 +1,16 @@
 /*
- *  Author: Ian
+ *  Auth: Ian
  *
- *  Project: Leaf Rand
+ *  Proj: Leaf Rand
  *
  *  Date: 8/5/22  
  *  
- *  Various Noise and Random methods built on the back of Squirrel3 Noise.
- *  An instanced Random Library with a persistent random position.
- *  Allows for a series of deterministic random calls.
+ *  Desc: Various Noise and Random methods built on the back of Squirrel3 Noise.
+ *      An instanced Random Library with a persistent random position.
+ *      Allowing for a series of deterministic random calls.
+ *  
+ *  Date: 3/19/24
+ *      Reduced garbage created from random weighted calls
  */
 
 using UnityEngine;
@@ -19,11 +22,19 @@ public class LeafRand
     /// <summary>
     /// Global Leaf Rand Instance
     /// </summary>
-    public  LeafRand I = new LeafRand(); 
+    public static LeafRand I = new LeafRand(); 
     private uint pos = 0;
     private uint seed = 0;
 
 
+    /// <summary>
+    /// Constructor setting the LeafRand instance's seed and rand position.
+    /// </summary>
+    public LeafRand(uint seed = 0, uint pos = 0)
+    {
+        this.seed = seed;
+        this.pos = pos;
+    }
     public uint GetSeed() => seed;
     public void SetSeed(uint newSeed, uint newPos = 0) { seed = newSeed; pos = newPos; }
     public void SetPos(uint newPos) => pos = newPos;
@@ -44,7 +55,7 @@ public class LeafRand
     }
     #region Random Number
     /// <summary>
-    /// Returns a random uint using the seed and pos.
+    /// Returns a random uint using the current seed and pos.
     /// <br></br> 
     /// Advances the random position.
     /// </summary>
@@ -83,37 +94,47 @@ public class LeafRand
     #endregion
     #region Random Element
     /// <returns>
-    /// Returns a uniformly random item from items.
+    /// Returns a uniformly random element from list.
     /// <br></br>
     /// Advances the random position.
     /// </returns>
-    public T Random<T>(List<T> items) => items[Range(0, items.Count - 1)];
+    public T Element<T>(List<T> list) => list[Range(0, list.Count - 1)];
+    /// <returns>
+    /// Returns a uniformly random element from array.
+    /// <br></br>
+    /// Advances the random position.
+    /// </returns>
+    public T Element<T>(T[] array) => array[Range(0, array.Length - 1)];
     ///<summary>
-    ///If no weights are passed in assumes uniform distribution. 
-    ///Otherweise lengths of Lists must be equal.
+    /// Returns a random element based on the passed in weights.
+    /// If no weights are passed in assumes uniform distribution. 
+    /// Otherweise lengths of Lists must be equal.
     /// <br></br>
     /// Advances the random position.
     ///</summary>
-    public T Weighted<T>(List<T> items, List<float> weights)
+    public T Weighted<T>(Func<int, T> GetElement, Func<int, float> GetWeight, Func<int> GetCount)
     {
-        if (weights.Count == 0) return Random(items);
-
-        //Gets Total Weight
+        // Gets Total Weight
         float totalWeight = 0;
-        foreach (float w in weights)
-            totalWeight += w;
+        for (int i = 0; i < GetCount(); i++)
+            totalWeight += GetWeight(i);
 
-        //Get rand
+        // If Total Weight = 0 -> Return Uniformly Random Element
+        if(totalWeight == 0)
+            if (GetCount() == 0) return GetElement(Range(0, GetCount() - 1));
+
+        // Return Weighted Random Element
         float rand = Range(0f, totalWeight);
         float weightIndex = 0;
-        for (int i = 0; i < items.Count; i++)
+        for (int i = 0; i < GetCount(); i++)
         {
-            weightIndex += weights[i];
+            weightIndex += GetWeight(i);
             if (weightIndex > rand)
-                return items[i];
+                return GetElement(i);
         }
 
-        throw new System.Exception($"LeafNoise: rand weight larger than totalweight! {items[0]}");
+        // This should be impossible!
+        throw new Exception($"LeafNoise: rand weight larger than totalweight!");
     }
     /// <summary>
     /// Returns a random item from the list of WeightedElements based on each Weighted's weight.
@@ -122,16 +143,11 @@ public class LeafRand
     /// </summary>
     public T Weighted<T>(List<Weighted<T>> weightedElements)
     {
-        List<float> weights = new();
-        List<T> elements = new();
-
-        foreach (Weighted<T> weightedElement in weightedElements)
-        {
-            weights.Add(weightedElement.weight);
-            elements.Add(weightedElement.element);
-        }
-
-        return Weighted(elements, weights);
+        return Weighted(
+            (int index) => weightedElements[index].element, 
+            (int index) => weightedElements[index].weight,
+            () => weightedElements.Count
+        );
     }
     /// <summary>
     /// Returns a random item from the array of WeightedElements based on each Weighted's weight.
@@ -140,16 +156,11 @@ public class LeafRand
     /// </summary>
     public T Weighted<T>(Weighted<T>[] weightedElements)
     {
-        List<float> weights = new();
-        List<T> elements = new();
-
-        foreach (Weighted<T> weightedElement in weightedElements)
-        {
-            weights.Add(weightedElement.weight);
-            elements.Add(weightedElement.element);
-        }
-
-        return Weighted(elements, weights);
+        return Weighted(
+            (int index) => weightedElements[index].element,
+            (int index) => weightedElements[index].weight,
+            () => weightedElements.Length
+        );
     }
     /// <summary>
     /// Returns a random item from the List of IWeighted based on each IWeighted's weight.
@@ -158,14 +169,11 @@ public class LeafRand
     /// </summary>
     public IWeighted Weighted(List<IWeighted> weightedElements)
     {
-        List<float> weights = new();
-
-        foreach (IWeighted weightedElement in weightedElements)
-        {
-            weights.Add(weightedElement.GetWeight());
-        }
-
-        return Weighted(weightedElements, weights);
+        return Weighted(
+            (int index) => weightedElements[index],
+            (int index) => weightedElements[index].GetWeight(),
+            () => weightedElements.Count
+        );
     }
     /// <summary>
     /// Returns a random item from the Array of IWeighted based on each IWeighted's weight.
@@ -174,16 +182,11 @@ public class LeafRand
     /// </summary>
     public IWeighted Weighted(IWeighted[] weightedElements)
     {
-        List<float> weights = new();
-        List<IWeighted> weightedElementList = new();
-
-        foreach (IWeighted weightedElement in weightedElements)
-        {
-            weightedElementList.Add(weightedElement);
-            weights.Add(weightedElement.GetWeight());
-        }
-
-        return Weighted(weightedElementList, weights);
+        return Weighted(
+            (int index) => weightedElements[index],
+            (int index) => weightedElements[index].GetWeight(),
+            () => weightedElements.Length
+        );
     }
     #endregion
     #endregion
