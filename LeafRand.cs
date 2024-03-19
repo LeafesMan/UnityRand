@@ -14,67 +14,89 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 
-public static class LeafRand
+public class LeafRand
 {
-    private static uint pos = 0;
-    private static uint seed = 0;
+    /// <summary>
+    /// Global Leaf Rand Instance
+    /// </summary>
+    public  LeafRand I = new LeafRand(); 
+    private uint pos = 0;
+    private uint seed = 0;
 
 
-    public static uint GetSeed() => seed;
-    public static void SetSeed(uint newSeed, uint newPos = 0) { seed = newSeed; pos = newPos; }
-    public static void SetPos(uint newPos) => pos = newPos;
+    public uint GetSeed() => seed;
+    public void SetSeed(uint newSeed, uint newPos = 0) { seed = newSeed; pos = newPos; }
+    public void SetPos(uint newPos) => pos = newPos;
 
 
     #region Random
-    ///<returns>Random roll against P(probability).<br></br>Advances the static position.</returns>
-    public static bool Chance(float successProbability) => Chance(successProbability, pos, seed, SetPos);
-    ///<returns>Random roll against P(probability).</returns>
-    public static bool Chance(float successProbability, uint pos, uint seed, Action<uint> posCallback = null)
+    ///<summary>
+    ///Random roll against P(probability).
+    ///<br></br>
+    ///Advances the random position.
+    ///</summary>
+    public bool Chance(float successProbability)
     {
         //Edge case if chance is 0 & 0 is rolled should return false
         if (successProbability == 0) return false;
 
-        return (float)Random(pos, seed, posCallback) / uint.MaxValue <= successProbability;
+        return (float)Random() / uint.MaxValue <= successProbability;
     }
     #region Random Number
-    /// <summary>Returns a random uint.
-    /// <br></br>Randomizes the static seed.</summary>
-    public static uint Random() => Random(pos, seed, SetPos);
-    public static uint Random(uint pos, uint seed, Action<uint> posCallback = null)
+    /// <summary>
+    /// Returns a random uint using the seed and pos.
+    /// <br></br> 
+    /// Advances the random position.
+    /// </summary>
+    public  uint Random()
     {
         pos = Noise(pos, seed);
 
-        posCallback.Invoke(pos);
-
         return pos;
     }
-
-    public static float Range(float min, float max) => Range(min, max, pos, seed, SetPos);
-    /// <summary>Returns a random float [min, max]. (Inclusive)</summary>
-    public static float Range(float min, float max, uint pos, uint seed, Action<uint> posCallback = null) => Remap(Random(pos, seed, posCallback), min, max);
-    /// <summary>Returns a random float [range.x, range.y]. (Inclusive)</summary>
-    public static float Range(Vector2 range) => Range(range, pos, seed, SetPos);
-    public static float Range(Vector2 range, uint pos, uint seed, Action<uint> posCallback = null) => Range(range.x, range.y, pos, seed, posCallback);
-    /// <summary>Returns a random integer [min, max]. (Inclusive)</summary>
-    public static int Range(int min, int max) => Range(min, max, pos, seed, SetPos);
-    public static int Range(int min, int max, uint pos, uint seed, Action<uint> posCallback = null) => Remap(Random(pos, seed, posCallback), min, max);
-
-    /// <summary>Returns a random integer [range.x, range.y]. (Inclusive)</summary>
-    public static int Range(Vector2Int range) => Range(range, pos, seed, SetPos);
-    public static int Range(Vector2Int range, uint pos, uint seed, Action<uint> posCallback = null) => Range(range.x, range.y, pos, seed, posCallback);
+    /// <summary>
+    /// Returns a random float [min, max]. (Inclusive)
+    /// <br></br>
+    /// Advances the random position.
+    /// </summary>
+    public  float Range(float min, float max) => Remap(Random(), min, max);
+    /// <summary>
+    /// Returns a random float [range.x, range.y]. (Inclusive)
+    /// <br></br>
+    /// Advances the random position.
+    /// </summary>
+    public float Range(Vector2 range) => Range(range.x, range.y);
+    /// <summary>
+    /// Returns a random integer [min, max]. (Inclusive)
+    /// <br></br>
+    /// Advances the random position.
+    /// </summary>
+    public int Range(int min, int max) => Remap(Random(), min, max);
+    /// <summary>
+    /// Returns a random integer [range.x, range.y]. (Inclusive)
+    /// <br></br>
+    /// Advances the random position.
+    /// </summary>
+    public int Range(Vector2Int range) => Range(range.x, range.y);
 
 
     #endregion
     #region Random Element
-    /// <returns>Returns a uniformly random item from items.</returns>
-    public static T Random<T>(List<T> items) => Random(items, pos, seed, SetPos);
-    public static T Random<T>(List<T> items, uint pos, uint seed, Action<uint> posCallback = null) => items[Range(0, items.Count - 1, pos, seed, posCallback)];
-    ///<summary>If no weights are passed in assumes uniform distribution. Otherweise lengths of Lists must be equal.</summary>
-    ///<returns>Random item from item list based on weights.</returns>
-    public static T Weighted<T>(List<T> items, List<float> weights) => Weighted(items, weights, pos, seed, SetPos);
-    public static T Weighted<T>(List<T> items, List<float> weights, uint pos, uint seed, Action<uint> posCallback = null)
+    /// <returns>
+    /// Returns a uniformly random item from items.
+    /// <br></br>
+    /// Advances the random position.
+    /// </returns>
+    public T Random<T>(List<T> items) => items[Range(0, items.Count - 1)];
+    ///<summary>
+    ///If no weights are passed in assumes uniform distribution. 
+    ///Otherweise lengths of Lists must be equal.
+    /// <br></br>
+    /// Advances the random position.
+    ///</summary>
+    public T Weighted<T>(List<T> items, List<float> weights)
     {
-        if (weights.Count == 0) return Random(items, pos, seed, posCallback);
+        if (weights.Count == 0) return Random(items);
 
         //Gets Total Weight
         float totalWeight = 0;
@@ -82,7 +104,7 @@ public static class LeafRand
             totalWeight += w;
 
         //Get rand
-        float rand = Range(0f, totalWeight, pos, seed, posCallback);
+        float rand = Range(0f, totalWeight);
         float weightIndex = 0;
         for (int i = 0; i < items.Count; i++)
         {
@@ -93,10 +115,12 @@ public static class LeafRand
 
         throw new System.Exception($"LeafNoise: rand weight larger than totalweight! {items[0]}");
     }
-
-    /// <summary>Returns a random item from the list of WeightedElements based on each Weighted's weight.</summary>
-    public static T Weighted<T>(List<Weighted<T>> weightedElements) => Weighted(weightedElements, pos, seed, SetPos);
-    public static T Weighted<T>(List<Weighted<T>> weightedElements, uint pos, uint seed, Action<uint> posCallback = null)
+    /// <summary>
+    /// Returns a random item from the list of WeightedElements based on each Weighted's weight.
+    /// <br></br>
+    /// Advances the random position.
+    /// </summary>
+    public T Weighted<T>(List<Weighted<T>> weightedElements)
     {
         List<float> weights = new();
         List<T> elements = new();
@@ -107,11 +131,14 @@ public static class LeafRand
             elements.Add(weightedElement.element);
         }
 
-        return Weighted(elements, weights, pos, seed, posCallback);
+        return Weighted(elements, weights);
     }
-    /// <summary>Returns a random item from the array of WeightedElements based on each Weighted's weight.</summary>
-    public static T Weighted<T>(Weighted<T>[] weightedElements) => Weighted(weightedElements, pos, seed, SetPos);
-    public static T Weighted<T>(Weighted<T>[] weightedElements, uint pos, uint seed, Action<uint> posCallback = null)
+    /// <summary>
+    /// Returns a random item from the array of WeightedElements based on each Weighted's weight.
+    /// <br></br>
+    /// Advances the random position.
+    /// </summary>
+    public T Weighted<T>(Weighted<T>[] weightedElements)
     {
         List<float> weights = new();
         List<T> elements = new();
@@ -122,11 +149,14 @@ public static class LeafRand
             elements.Add(weightedElement.element);
         }
 
-        return Weighted(elements, weights, pos, seed, posCallback);
+        return Weighted(elements, weights);
     }
-    /// <summary>Returns a random item from the List of IWeighted based on each IWeighted's weight.</summary>
-    public static IWeighted Weighted(List<IWeighted> weightedElements) => Weighted(weightedElements, pos, seed, SetPos);
-    public static IWeighted Weighted(List<IWeighted> weightedElements, uint pos, uint seed, Action<uint> posCallback = null)
+    /// <summary>
+    /// Returns a random item from the List of IWeighted based on each IWeighted's weight.
+    /// <br></br>
+    /// Advances the random position.
+    /// </summary>
+    public IWeighted Weighted(List<IWeighted> weightedElements)
     {
         List<float> weights = new();
 
@@ -135,11 +165,14 @@ public static class LeafRand
             weights.Add(weightedElement.GetWeight());
         }
 
-        return Weighted(weightedElements, weights, pos, seed, posCallback);
+        return Weighted(weightedElements, weights);
     }
-    /// <summary>Returns a random item from the Array of IWeighted based on each IWeighted's weight.</summary>
-    public static IWeighted Weighted(IWeighted[] weightedElements) => Weighted(weightedElements, pos, seed, SetPos);
-    public static IWeighted Weighted(IWeighted[] weightedElements, uint pos, uint seed, Action<uint> posCallback = null)
+    /// <summary>
+    /// Returns a random item from the Array of IWeighted based on each IWeighted's weight.
+    /// <br></br>
+    /// Advances the random position.
+    /// </summary>
+    public IWeighted Weighted(IWeighted[] weightedElements)
     {
         List<float> weights = new();
         List<IWeighted> weightedElementList = new();
@@ -150,7 +183,7 @@ public static class LeafRand
             weights.Add(weightedElement.GetWeight());
         }
 
-        return Weighted(weightedElementList, weights, pos, seed, posCallback);
+        return Weighted(weightedElementList, weights);
     }
     #endregion
     #endregion
@@ -233,22 +266,38 @@ public static class LeafRand
     }
     #endregion
     #region Util
-    /// <summary> Remaps uint to a value in [range.x, range.y]. (Inclusive)</summary>
+    /// <summary> 
+    /// Remaps uint to a value in [range.x, range.y]. (Inclusive)
+    /// </summary>
     public static float Remap(uint noise, float min, float max) => min + (float)noise / uint.MaxValue * (max - min);
-    /// <summary> Remaps uint to a value in [range.x, range.y]. (Inclusive)</summary>
+    /// <summary> 
+    /// Remaps uint to a value in [range.x, range.y]. (Inclusive)
+    /// </summary>
     public static int Remap(uint noise, int min, int max)
     {
         if (noise == uint.MaxValue) return max;
         else return Floor(min + (float)noise / uint.MaxValue * (max + 1 - min));
     }
 
-    /// <summary> uint Lerp </summary>
+    /// <summary> 
+    /// uint Lerp 
+    /// </summary>
     static uint Lerp(uint from, uint to, float lerpPercent) => (uint)((1 - lerpPercent) * from + lerpPercent * to);
-    static int Ceil(float num)
-    {   //Returns num rounding up relative to the absolute numue of num
-        if (num % 1 == 0) return (int)num;
-        else return (int)(num + Mathf.Sign(num));
-    }
+    /// <summary>
+    /// Rounds up relative to the absolute value of num.
+    /// <br></br>
+    /// * -1.4 -> -2
+    /// <br></br>
+    /// * 1.4  ->  2
+    /// </summary>
+    static int Ceil(float num) => (num % 1 == 0) ? (int) num : (int) (num + Mathf.Sign(num));
+    /// <summary>
+    /// Rounds down relative to the absolute value of num.
+    /// <br></br>
+    /// * -1.4 -> -1
+    /// <br></br>
+    /// * 1.4  ->  1
+    /// </summary>
     static int Floor(float num) => (int)num;
     static float GetRawDecimal(float num) => Mathf.Abs(num % 1);
     #endregion
