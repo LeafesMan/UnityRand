@@ -61,7 +61,7 @@ public class LeafRand
     /// </summary>
     public  uint Random()
     {
-        pos = Noise(pos, seed);
+        pos = Noise((int)pos, seed);
 
         return pos;
     }
