@@ -19,10 +19,6 @@ using System;
 
 public class Rand
 {
-    /// <summary>
-    /// Global Leaf Rand Instance
-    /// </summary>
-    public static Rand i = new Rand(); 
     private uint pos = 0;
     private uint seed = 0;
 
