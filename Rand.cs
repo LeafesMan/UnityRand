@@ -85,6 +85,28 @@ public class Rand
     /// Advances the random position.
     /// </summary>
     public int Range(Vector2Int range) => Range(range.x, range.y);
+    /// <summary>
+    /// Returns a uniformly random 2d direction given the theta range.
+    /// </summary>
+    public Vector2 Direction(Vector2 thetaRange)
+    {   
+        float theta = Range(thetaRange);
+        return new(Mathf.Cos(theta), Mathf.Sin(theta));
+    }
+    /// <summary>
+    /// Returns a uniformly random 3d direction given the theta and phi range.
+    /// </summary>
+    public Vector3 Direction(Vector2 thetaRange, Vector2 phiRange) 
+    {
+        float theta = Range(thetaRange);
+        float phi = Range(phiRange);
+
+        float x = Mathf.Cos(theta) * Mathf.Sin(phi);
+        float y = Mathf.Sin(theta) * Mathf.Sin(phi);
+        float z = Mathf.Cos(phi);
+
+        return new(x, y, z);
+    }
 
 
     #endregion
