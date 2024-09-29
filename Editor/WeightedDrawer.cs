@@ -1,20 +1,23 @@
-/*************************************************
+/*
  *  Author: Ian
  *
- *  Project: Untitled Monster Game
+ *  Project: LeafRand
  *
  *  Date: 5/13/23
  *      Property Drawer for Weighted Elements 
  *      Displays Element left of its Weight on 
  *      a single line
- *************************************************/
-using UnityEngine;
+ *  Date: 9/28/24
+ *      Reimplemented with UI Toolkit
+*/
 using UnityEditor;
+using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 
 [CustomPropertyDrawer(typeof(Weighted<>))]
 public class WeightedDrawer : PropertyDrawer
 {
-    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+    /*public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
         EditorGUI.BeginProperty(position, label, property);
 
@@ -42,5 +45,21 @@ public class WeightedDrawer : PropertyDrawer
 
 
         EditorGUI.EndProperty();
+    }*/
+
+
+    // Ui toolkit implementation of the above
+    // better alignment plus respects any editor Attributes applied to the element
+    public override VisualElement CreatePropertyGUI(SerializedProperty property)
+    {
+
+        VisualElement root = new VisualElement();
+        //root.style.flexDirection = FlexDirection.Row; 
+
+        root.Add(new PropertyField(property.FindPropertyRelative("element")));
+        root.Add(new PropertyField(property.FindPropertyRelative("weight")));
+
+
+        return root;
     }
 }

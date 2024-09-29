@@ -107,8 +107,6 @@ public class Rand
 
         return new(x, y, z);
     }
-
-
     #endregion
     #region Random Element
     /// <returns>
@@ -138,8 +136,8 @@ public class Rand
             totalWeight += GetWeight(i);
 
         // If Total Weight = 0 -> Return Uniformly Random Element
-        if(totalWeight == 0)
-            if (GetCount() == 0) return GetElement(Range(0, GetCount() - 1));
+        if(totalWeight <= 0) return GetElement(Range(0, GetCount() - 1));
+        if (GetCount() == 0) throw new Exception($"LeafNoise: Empty list passed into Weighted()");
 
         // Return Weighted Random Element
         float rand = Range(0f, totalWeight);
@@ -152,7 +150,7 @@ public class Rand
         }
 
         // This should be impossible!
-        throw new Exception($"LeafNoise: rand weight larger than totalweight!");
+        throw new Exception($"LeafNoise: rand weight of: {rand} > totalweight: {totalWeight}!");
     }
     /// <summary>
     /// Returns a random item from the list of WeightedElements based on each Weighted's weight.
@@ -185,7 +183,7 @@ public class Rand
     /// <br></br>
     /// Advances the random position.
     /// </summary>
-    public IWeighted Weighted(List<IWeighted> weightedElements)
+    public T Weighted<T>(List<T> weightedElements) where T : IWeighted
     {
         return Weighted(
             (int index) => weightedElements[index],
@@ -198,7 +196,7 @@ public class Rand
     /// <br></br>
     /// Advances the random position.
     /// </summary>
-    public IWeighted Weighted(IWeighted[] weightedElements)
+    public T Weighted<T>(T[] weightedElements) where T : IWeighted
     {
         return Weighted(
             (int index) => weightedElements[index],
@@ -210,7 +208,9 @@ public class Rand
     #endregion
     #region Noise
     #region Squirrel3 Functions
-    /// <summary>Returns 1D Noise given a position and a seed</summary>
+    /// <summary>
+    /// Returns 1D Noise given a position and a seed
+    /// </summary>
     public static uint Noise(int position, uint seed)
     {   //Squirrel3 1D Noise Function
         uint bigP1 = 0x68E31DA4;
@@ -227,12 +227,18 @@ public class Rand
         mangled ^= (mangled >> 8);
         return mangled;
     }
-    /// <summary>Returns 2D Noise given a position and a seed</summary>
+    /// <summary>
+    /// Returns 2D Noise given a position and a seed
+    /// </summary>
     public static uint Noise(int x, int y, uint seed) => Noise(x + y * 198491317, seed);
-    /// <summary>Returns 3D Noise given a position and a seed</summary>
+    /// <summary>
+    /// Returns 3D Noise given a position and a seed
+    /// </summary>
     public static uint Noise(int x, int y, int z, uint seed) => Noise(x + y * 198491317 + z * 6542989, seed);
     #endregion
-    /// <summary>Returns a linear interpolation between 1D noise values.</summary>
+    /// <summary>
+    /// Returns a linear interpolation between 1D noise values.
+    /// </summary>
     public static uint Noise(float position, uint seed)
     {
         uint floorNoise = Noise(Floor(position), seed);
@@ -240,7 +246,9 @@ public class Rand
 
         return Lerp(floorNoise, ceilNoise, GetRawDecimal(position));
     }
-    /// <summary>Returns a linear interpolation between 2D noise values.</summary>
+    /// <summary>
+    /// Returns a linear interpolation between 2D noise values.
+    /// </summary>
     public static uint Noise(float x, float y, uint seed)
     {
         //Get Interpolations between x with floored y and x with ceiling y

@@ -37,11 +37,13 @@ public static class SRand
     public static float Range(Vector2 range) => i.Range(range);
     public static int Range(int min, int max) => i.Range(min, max);
     public static int Range(Vector2Int range) => i.Range(range);
+    public static Vector2 Direction(Vector2 thetaRange) => i.Direction(thetaRange);
+    public static Vector3 Direction(Vector2 thetaRange, Vector2 phiRange) => i.Direction(thetaRange, phiRange);
     public static T Element<T>(List<T> list) => i.Element(list);
     public static T Element<T>(T[] array) => i.Element(array);
     public static T Weighted<T>(Func<int, T> GetElement, Func<int, float> GetWeight, Func<int> GetCount) => i.Weighted(GetElement, GetWeight, GetCount);
     public static T Weighted<T>(List<Weighted<T>> weightedElements) => i.Weighted(weightedElements);
     public static T Weighted<T>(Weighted<T>[] weightedElements) => i.Weighted(weightedElements);
-    public static IWeighted Weighted(List<IWeighted> weightedElements) => i.Weighted(weightedElements);
-    public static IWeighted Weighted(IWeighted[] weightedElements) => i.Weighted(weightedElements);
+    public static T Weighted<T>(List<T> weightedElements) where T : IWeighted => i.Weighted(weightedElements);
+    public static T Weighted<T>(T[] weightedElements) where T : IWeighted => i.Weighted(weightedElements);
 }
