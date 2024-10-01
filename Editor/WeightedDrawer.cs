@@ -13,6 +13,7 @@
 using UnityEditor;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
+using static UnityEngine.Rendering.DebugUI.MessageBox;
 
 [CustomPropertyDrawer(typeof(Weighted<>))]
 public class WeightedDrawer : PropertyDrawer
@@ -54,10 +55,14 @@ public class WeightedDrawer : PropertyDrawer
     {
 
         VisualElement root = new VisualElement();
-        //root.style.flexDirection = FlexDirection.Row; 
+        root.style.flexDirection = FlexDirection.Row;
+        root.style.alignItems = Align.Center;
 
-        root.Add(new PropertyField(property.FindPropertyRelative("element")));
-        root.Add(new PropertyField(property.FindPropertyRelative("weight")));
+        root.Add(new Label("Item:"));
+        root.Add(new PropertyField(property.FindPropertyRelative("element")) { label = "", style = { flexGrow = 1 } });
+        root.Add(new Label("Weight:"){ style = { marginLeft = 15} });
+        root.Add(new PropertyField(property.FindPropertyRelative("weight")) { style = {width = 50} });
+
 
 
         return root;
