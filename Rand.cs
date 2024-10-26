@@ -1,16 +1,13 @@
 /*
  *  Auth: Ian
  *
- *  Proj: Leaf Rand
+ *  Proj: Rand
  *
  *  Date: 8/5/22  
  *  
  *  Desc: Various Noise and Random methods built on the back of Squirrel3 Noise.
  *      An instanced Random Library with a persistent random position.
  *      Allowing for a series of deterministic random calls.
- *  
- *  Date: 3/19/24
- *      Reduced garbage created from random weighted calls
  */
 
 using UnityEngine;
@@ -19,10 +16,9 @@ using System;
 
 public class Rand
 {
+    #region Seed and Pos
     private uint pos = 0;
     private uint seed = 0;
-
-
     /// <summary>
     /// Constructor setting the LeafRand instance's seed and rand position.
     /// </summary>
@@ -34,8 +30,7 @@ public class Rand
     public uint GetSeed() => seed;
     public void SetSeed(uint newSeed, uint newPos = 0) { seed = newSeed; pos = newPos; }
     public void SetPos(uint newPos) => pos = newPos;
-
-
+    #endregion
     #region Random
     ///<summary>
     ///Random roll against P(probability).
@@ -107,6 +102,15 @@ public class Rand
 
         return new(x, y, z);
     }
+    public Color Color(Vector2 hueRange, Vector2 saturationRange , Vector2 valueRange)
+    {
+        return UnityEngine.Color.HSVToRGB(Range(hueRange), Range(saturationRange), Range(valueRange));
+    }
+    public Color Color(Vector2 saturationRange, Vector2 valueRange) => Color(new Vector2(0,1), saturationRange, valueRange);
+    public Color ColorRGB(Vector2 redRange, Vector2 greenRange, Vector2 blueRange)
+    {
+        return new Color(Range(redRange), Range(greenRange), Range(blueRange));
+    }
     #endregion
     #region Random Element
     /// <returns>
@@ -157,10 +161,10 @@ public class Rand
     /// <br></br>
     /// Advances the random position.
     /// </summary>
-    public T Weighted<T>(List<Weighted<T>> weightedElements)
+    public Weighted<T> Weighted<T>(List<Weighted<T>> weightedElements)
     {
         return Weighted(
-            (int index) => weightedElements[index].element, 
+            (int index) => weightedElements[index], 
             (int index) => weightedElements[index].weight,
             () => weightedElements.Count
         );
@@ -170,10 +174,10 @@ public class Rand
     /// <br></br>
     /// Advances the random position.
     /// </summary>
-    public T Weighted<T>(Weighted<T>[] weightedElements)
+    public Weighted<T> Weighted<T>(Weighted<T>[] weightedElements)
     {
         return Weighted(
-            (int index) => weightedElements[index].element,
+            (int index) => weightedElements[index],
             (int index) => weightedElements[index].weight,
             () => weightedElements.Length
         );

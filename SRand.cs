@@ -42,8 +42,8 @@ public static class SRand
     public static T Element<T>(List<T> list) => i.Element(list);
     public static T Element<T>(T[] array) => i.Element(array);
     public static T Weighted<T>(Func<int, T> GetElement, Func<int, float> GetWeight, Func<int> GetCount) => i.Weighted(GetElement, GetWeight, GetCount);
-    public static T Weighted<T>(List<Weighted<T>> weightedElements) => i.Weighted(weightedElements);
-    public static T Weighted<T>(Weighted<T>[] weightedElements) => i.Weighted(weightedElements);
+    public static Weighted<T> Weighted<T>(List<Weighted<T>> weightedElements) => i.Weighted(weightedElements);
+    public static Weighted<T> Weighted<T>(Weighted<T>[] weightedElements) => i.Weighted(weightedElements);
     public static T Weighted<T>(List<T> weightedElements) where T : IWeighted => i.Weighted(weightedElements);
     public static T Weighted<T>(T[] weightedElements) where T : IWeighted => i.Weighted(weightedElements);
 }
